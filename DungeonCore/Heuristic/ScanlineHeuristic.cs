@@ -4,15 +4,18 @@ namespace DungeonCore.Heuristic;
 
 public sealed class ScanlineHeuristic : IHeuristic
 {
+    private int _idx;
+
     public int PickNextCell(WaveGrid grid)
     {
-        for (var id = 0; id < grid.CellCount; id++)
+        while (true)
         {
-            var cell = grid.Cells[id];
-            if (cell.IsDecided) continue;
-            return id;
+            if (_idx >= grid.CellCount) return -1;
+            var cell = grid.Cells[_idx];
+            _idx++;
+            if (cell.Observed != -1) continue;
+            return _idx - 1;
         }
-        return -1;
     }
 
     public void OnDomainReduced(int cellId, int removedState) { /* no-op */ }

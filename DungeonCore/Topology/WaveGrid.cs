@@ -44,7 +44,7 @@ public class WaveGrid
     public bool Observe(int cellId, int state)
     {
         var cell = Cells[cellId];
-        if (cell.IsDecided) return false;
+        if (cell.Observed != -1) return false;
         cell.SetObserved(state);
         Observed?.Invoke(cellId, state);
         return true;

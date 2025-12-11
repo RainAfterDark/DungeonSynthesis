@@ -27,21 +27,10 @@ public class TileMapGenerator<TBase> (
     public PropagationResult Step()
     {
         var cellId = heuristic.PickNextCell(_grid);
-        if (cellId == -1)
-        {
-            return PropagationResult.Collapsed;
-        }
-
-        var cell = _grid.Cells[cellId];
-        var state = model.PickState(cell);
-
-        if (state == -1 
-            || !propagator.Observe(_grid, model, cellId, state) 
-            || !propagator.Propagate(_grid, model))
-        {
-            return PropagationResult.Contradicted;
-        }
-        return PropagationResult.Collapsing;
+        if (cellId == -1) return PropagationResult.Collapsed;
+        return propagator.Collapse(_grid, model, cellId) 
+            ? PropagationResult.Collapsing 
+            : PropagationResult.Contradicted;
     }
 
     public PropagationResult Generate()

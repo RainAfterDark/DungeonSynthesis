@@ -9,7 +9,7 @@ public class MappedGrid<TBase> where TBase : notnull
     public int Width { get; }
     public int Height { get; }
 
-    public MappedGrid(TBase[] data, int width, int height)
+    public MappedGrid(TBase[] data, int width, int height, TBase unknownValue)
     {
         Base = data;
         Width = width;
@@ -17,31 +17,12 @@ public class MappedGrid<TBase> where TBase : notnull
         var id = 0;
         foreach (var cell in Base)
         {
-            if (_base2Id.TryAdd(cell, id) && _id2Base.TryAdd(id, cell))
-            {
-                id++;
-            }
+            if (!_base2Id.TryAdd(cell, id)) continue;
+            _id2Base.Add(id, cell);
+            id++;
         }
-    }
-
-    // Backward-compat: allow constructing from 2D and flatten internally
-    public MappedGrid(TBase[,] grid)
-    {
-        Height = grid.GetLength(0);
-        Width = grid.GetLength(1);
-        Base = new TBase[Width * Height];
-        for (var y = 0; y < Height; y++)
-            for (var x = 0; x < Width; x++)
-                Base[y * Width + x] = grid[y, x];
-
-        var id = 0;
-        foreach (var cell in Base)
-        {
-            if (_base2Id.TryAdd(cell, id) && _id2Base.TryAdd(id, cell))
-            {
-                id++;
-            }
-        }
+        _base2Id.Add(unknownValue, -1);
+        _id2Base.Add(-1, unknownValue);
     }
 
     public int[] ToTileIds(TBase[] data, int width, int height)
