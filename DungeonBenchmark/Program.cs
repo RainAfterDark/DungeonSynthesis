@@ -22,8 +22,8 @@ var oh = 25;
 var ow = 50;
 var tm = new TileMapGenerator<char>(mg, model, 
     new ScanlineHeuristic(), 
-    new RecursivePropagator(),
-    ow, oh, new Random().Next());
+    new Ac3Propagator(),
+    ow, oh, 1);
     tm.Initialize();
     Console.WriteLine(tm.Generate());
     Console.WriteLine(Helpers.GridToString(tm.ToBase(), ow, oh));
