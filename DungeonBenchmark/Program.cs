@@ -18,20 +18,30 @@ var s =
     """;
 var (charData, width, height) = Helpers.StringToCharGrid(s);
 var mg = new MappedGrid<char>(charData, width, height,'?');
-var model = new OverlappingModel(3);
+
 const int oh = 28;
 const int ow = 100;
-var seed = Random.Shared.Next();
-// seed = 1724546381;
-var tm = new TileMapGenerator<char>(mg, model, 
-    new MinEntropyHeuristic(), 
-    new Ac2001Propagator(),
-    ow, oh, seed);
-
 var sw = new Stopwatch();
-sw.Start();
-tm.Initialize();
-var result = tm.Generate();
-sw.Stop();
+TileMapGenerator<char>? tm = null;
+int seed = 0;
+int runs = 0;
+PropagationResult result = PropagationResult.Contradicted;
+while (result == PropagationResult.Contradicted || runs < 10)
+{
+    GC.Collect();
+    seed = Random.Shared.Next();
+    // seed = 1190156738;
+    tm = new TileMapGenerator<char>(mg,
+        new OverlappingModel(3),
+        new OptimizedEntropyHeuristic(), 
+        new Ac4Propagator(),
+        ow, oh, seed);
+    sw.Reset();
+    sw.Start();
+    tm.Initialize();
+    result = tm.Generate();
+    sw.Stop();
+    runs++;
+}
 Console.WriteLine(tm);
-Console.WriteLine($"Seed: {seed} | Domain: {model.StateCount} | {result} (took {sw.ElapsedMilliseconds}ms)");
+Console.WriteLine($"Runs: {runs} | Seed: {seed} | {result} (took {sw.ElapsedMilliseconds}ms)");

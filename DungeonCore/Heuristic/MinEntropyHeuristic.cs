@@ -7,7 +7,7 @@ public sealed class MinEntropyHeuristic : IHeuristic
 {
     private Random _random = new();
     private double[] _stateWlw = []; // Precomputed (Weight * Log(Weight)) for each state ID
-    private double[] _cellWlwSums = []; // The shadow array tracking Sum(WLW) per cell
+    private double[] _cellWlwSums = []; // The shadow array tracking Sum(Wlw) per cell
     private bool _initialized; 
 
     public void Initialize(WaveGrid grid, IModel model, Random random)
@@ -17,7 +17,6 @@ public sealed class MinEntropyHeuristic : IHeuristic
         for (var i = 0; i < model.StateCount; i++)
         {
             var w = model.GetWeight(i);
-            // Handle 0 weight safely to avoid NaN
             _stateWlw[i] = w > 1e-9 ? w * Math.Log(w) : 0;
         }
         
@@ -54,7 +53,7 @@ public sealed class MinEntropyHeuristic : IHeuristic
             // H = log(SumWeights) - (SumWlw / SumWeights)
             var sumW = cell.SumWeights;
             var sumWlw = _cellWlwSums[i];
-            var entropy = Math.Log(sumW) - (sumWlw / sumW);
+            var entropy = Math.Log(sumW) - sumWlw / sumW;
 
             // Add noise for organic selection
             var noise = _random.NextDouble() * 1e-4;

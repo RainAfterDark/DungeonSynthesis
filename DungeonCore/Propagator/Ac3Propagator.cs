@@ -4,7 +4,7 @@ using DungeonCore.Topology;
 
 namespace DungeonCore.Propagator;
 
-public class Ac3Propagator : IPropagator
+public sealed class Ac3Propagator : IPropagator
 {
     private readonly Stack<int> _dirtyStack = new();
     

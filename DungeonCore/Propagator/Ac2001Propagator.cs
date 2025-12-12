@@ -34,14 +34,10 @@ public sealed class Ac2001Propagator : IPropagator
         
         var cell = grid.Cells[cellId];
         var chosenState = model.PickState(cell);
+        if (chosenState == -1 || !grid.Observe(cellId, chosenState)) return false;
         
-        if (chosenState == -1) return false;
-        if (cell.Observed == chosenState) return true;
-
-        cell.Observe(chosenState);
         _dirtyStack.Clear();
         _dirtyStack.Push(cellId);
-
         return Propagate(grid, model);
     }
 

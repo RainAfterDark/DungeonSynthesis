@@ -52,18 +52,16 @@ public sealed class Ac4Propagator : IPropagator
         var cell = grid.Cells[cellId];
         var chosenState = model.PickState(cell);
         if (chosenState == -1) return false;
-        _removalQueue.Clear();
         
-        // Enqueue eliminations
+        _removalQueue.Clear();
         for (var state = 0; state < model.StateCount; state++)
         {
             if (!cell.Domain[state]) continue;
             if (state == chosenState) continue;
             _removalQueue.Enqueue((cellId, state));
         }
-
-        cell.Observe(chosenState);
-        return Propagate(grid, model);
+        
+        return grid.Observe(cellId, chosenState) && Propagate(grid, model);
     }
 
     private bool Propagate(WaveGrid grid, IModel model)

@@ -4,7 +4,7 @@ using DungeonCore.Topology;
 
 namespace DungeonCore.Propagator;
 
-public class RecursivePropagator(int maxDepth = int.MaxValue) : IPropagator
+public sealed class RecursivePropagator(int maxDepth = int.MaxValue) : IPropagator
 {
     public bool Collapse(WaveGrid grid, IModel model, int cellId)
     {
