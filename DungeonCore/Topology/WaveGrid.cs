@@ -20,10 +20,10 @@ public class WaveGrid
         Cells = new WaveCell[CellCount];
     }
 
-    public void Initialize(int stateCount)
+    public void Initialize(int stateCount, double sumWeights)
     {
         for (var i = 0; i < CellCount; i++)
-            Cells[i] = new WaveCell(stateCount);
+            Cells[i] = new WaveCell(stateCount, sumWeights);
     }
 
     public int ToId(int x, int y) => y * Width + x;
@@ -41,20 +41,20 @@ public class WaveGrid
         }
     }
 
-    public bool Observe(int cellId, int state)
+    public bool Observe(int cellId, int stateId)
     {
         var cell = Cells[cellId];
         if (cell.Observed != -1) return false;
-        cell.SetObserved(state);
-        Observed?.Invoke(cellId, state);
+        cell.Observe(stateId);
+        Observed?.Invoke(cellId, stateId);
         return true;
     }
 
-    public bool Ban(int cellId, int state)
+    public bool Ban(int cellId, int stateId, double weight)
     {
         var cell = Cells[cellId];
-        var changed = cell.Ban(state);
-        if (changed) Banned?.Invoke(cellId, state);
+        var changed = cell.Ban(stateId, weight);
+        if (changed) Banned?.Invoke(cellId, stateId);
         return changed;
     }
 }

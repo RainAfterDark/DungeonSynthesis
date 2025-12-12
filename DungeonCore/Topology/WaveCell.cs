@@ -2,25 +2,39 @@ using System.Collections;
 
 namespace DungeonCore.Topology;
 
-public class WaveCell(int states)
+public class WaveCell(int states, double sumWeights)
 {
     public int Observed { get; private set; } = -1;
-    public BitArray Domain { get; } = new(states, true);
+    private BitArray Domain { get; } = new(states, true);
     public int DomainCount { get; private set; } = states;
+    public double SumWeights { get; private set; } = sumWeights;
+    
+    public bool IsPossibleState(int stateId) => Domain[stateId];
 
-    public void SetObserved(int state)
+    public IEnumerable<int> GetPossibleStates()
     {
-        Observed = state;
+        for (var i = 0; i < Domain.Length; i++)
+        {
+            if (!Domain[i]) continue;
+            yield return i;
+        }
+    }
+
+    public void Observe(int stateId)
+    {
+        Observed = stateId;
         for (var i = 0; i < Domain.Length; i++) 
-            Domain[i] = i == state;
+            Domain[i] = i == stateId;
         DomainCount = 1;
     }
 
-    public bool Ban(int state)
+    public bool Ban(int stateId, double weight)
     {
-        if (!Domain[state]) return false;
-        Domain[state] = false;
+        if (!Domain[stateId]) return false;
+        Domain[stateId] = false;
         DomainCount--;
+        SumWeights -= weight;
+        if (SumWeights < 1e-9) SumWeights = 0;
         return true;
     }
 }

@@ -10,35 +10,33 @@ public class RecursivePropagator(int maxDepth = int.MaxValue) : IPropagator
     {
         var state = model.PickState(grid.Cells[cellId]);
         if (state == -1 || !grid.Observe(cellId, state)) return false;
-        Propagate(grid, model, cellId, maxDepth);
-        return true;
+        return Propagate(grid, model, cellId, maxDepth);
     }
 
-    public int Propagate(WaveGrid grid, IModel model, int cellId, int depth)
+    private bool Propagate(WaveGrid grid, IModel model, int cellId, int depth)
     {
-        if (depth == 0) return maxDepth;
         var cell = grid.Cells[cellId];
-        var deepest = maxDepth - depth;
+        var valid = cell.DomainCount > 0;
+        if (depth <= 0 || !valid) return valid;
         
         foreach (var (neighborId, dir) in grid.NeighborsOf(cellId))
         {
             var nCell = grid.Cells[neighborId];
             var oppositeDir = Direction.Invert(dir);
 
-            for (var nState = 0; nState < model.StateCount; nState++)
+            foreach (var nState in nCell.GetPossibleStates())
             {
-                if (!nCell.Domain[nState]) continue;
                 var isCompatible = model
                     .GetNeighbors(nState, oppositeDir)
-                    .Any(allowedNeighbor => cell.Domain[allowedNeighbor]);
+                    .Any(support => cell.IsPossibleState(support));
 
                 if (isCompatible) continue;
-                if (!grid.Ban(neighborId, nState)) continue;
-                var newDepth = Propagate(grid, model, neighborId, depth - 1);
-                deepest = Math.Max(deepest, newDepth);
+                var weight = model.GetWeight(nState);
+                if (!grid.Ban(neighborId, nState, weight)) continue;
+                if (Propagate(grid, model, neighborId, depth - 1)) continue;
+                return false;
             }
         }
-        
-        return deepest;
+        return true;
     }
 }

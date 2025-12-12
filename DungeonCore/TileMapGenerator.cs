@@ -21,7 +21,10 @@ public class TileMapGenerator<TBase> (
     public void Initialize()
     {
         model.Initialize(inputGrid, _random);
-        _grid.Initialize(model.StateCount);
+        _grid.Initialize(model.StateCount, model.SumWeights);
+        heuristic.Initialize(_grid, model, _random);
+        _grid.Banned += heuristic.OnBanned;
+        _grid.Observed += heuristic.OnObserved;
     }
     
     public PropagationResult Step()

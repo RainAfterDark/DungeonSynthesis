@@ -6,23 +6,23 @@ namespace DungeonCore.Propagator;
 
 public class Ac3Propagator : IPropagator
 {
+    private readonly Stack<int> _dirtyStack = new();
+    
     public bool Collapse(WaveGrid grid, IModel model, int cellId)
     {
         var state = model.PickState(grid.Cells[cellId]);
         if (state == -1 || !grid.Observe(cellId, state)) return false;
-        Propagate(grid, model, cellId);
-        return true;
+        _dirtyStack.Push(cellId);
+        return Propagate(grid, model);
     }
 
-    private void Propagate(WaveGrid grid, IModel model, int initialCellId)
+    private bool Propagate(WaveGrid grid, IModel model)
     {
-        var dirtyStack = new Stack<int>();
-        dirtyStack.Push(initialCellId);
-
-        while (dirtyStack.Count > 0)
+        while (_dirtyStack.Count > 0)
         {
-            var cellId = dirtyStack.Pop();
+            var cellId = _dirtyStack.Pop();
             var cell = grid.Cells[cellId];
+            if (cell.DomainCount < 1) return false;
 
             foreach (var (neighborId, dir) in grid.NeighborsOf(cellId))
             {
@@ -30,21 +30,23 @@ public class Ac3Propagator : IPropagator
                 var oppositeDir = Direction.Invert(dir);
                 var changed = false;
 
-                for (var nState = 0; nState < model.StateCount; nState++)
+                foreach (var nState in nCell.GetPossibleStates())
                 {
-                    if (!nCell.Domain[nState]) continue;
                     var isCompatible = model
                         .GetNeighbors(nState, oppositeDir)
-                        .Any(allowedNeighbor => cell.Domain[allowedNeighbor]);
+                        .Any(support => cell.IsPossibleState(support));
 
                     if (isCompatible) continue;
-                    if (!grid.Ban(neighborId, nState)) continue; 
+                    var weight = model.GetWeight(nState);
+                    if (!grid.Ban(neighborId, nState, weight)) continue; 
                     changed = true;
                 }
 
                 if (!changed) continue;
-                dirtyStack.Push(neighborId);
+                _dirtyStack.Push(neighborId);
             }
         }
+
+        return true;
     }
 }

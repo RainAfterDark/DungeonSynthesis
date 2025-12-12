@@ -10,7 +10,9 @@ public class OverlappingModel(int n, bool periodic = true, bool symmetrical = fa
     
     private List<CellState> States { get; } = new();
     public int StateCount { get; private set; }
+    public double SumWeights { get; private set; }
     public int GetTileId(int stateId) => stateId == -1 ? -1 : States[stateId].TileId;
+    public double GetWeight(int stateId) => stateId == -1 ? 0.0 : States[stateId].Weight;
     public IReadOnlyList<int> GetNeighbors(int stateId, int dir) => States[stateId].GetNeighbors(dir);
 
     public void Initialize<TBase>(MappedGrid<TBase> inputGrid, Random random) where TBase : notnull
@@ -66,8 +68,11 @@ public class OverlappingModel(int n, bool periodic = true, bool symmetrical = fa
         }
 
         // Add all states
-        foreach (var kv in map)
-            States.Add(kv.Value);
+        foreach (var cell in map.Select(kv => kv.Value))
+        {
+            SumWeights += cell.Weight;
+            States.Add(cell);
+        }
         StateCount = States.Count;
 
         // Build adjacency map
@@ -83,19 +88,11 @@ public class OverlappingModel(int n, bool periodic = true, bool symmetrical = fa
     
     public int PickState(WaveCell cell)
     {
-        var sumOfWeights = 0.0;
-        for (var i = 0; i < StateCount; i++)
+        var r = _random.NextDouble() * cell.SumWeights;
+        foreach (var state in cell.GetPossibleStates())
         {
-            if (!cell.Domain[i]) continue; 
-            sumOfWeights += States[i].Weight;
-        }
-
-        var r = _random.NextDouble() * sumOfWeights;
-        for (var i = 0; i < StateCount; i++)
-        {
-            if (!cell.Domain[i]) continue;
-            r -= States[i].Weight;
-            if (r < 0) return i;
+            r -= States[state].Weight;
+            if (r < 0) return state;
         }
         return -1;
     }
