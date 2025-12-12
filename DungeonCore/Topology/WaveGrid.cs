@@ -11,7 +11,7 @@ public class WaveGrid
     public WaveCell[] Cells { get; }
 
     public event Action<int, int>? Banned; // (cellId, removedState)
-    public event Action<int, int>? Observed;      // (cellId, chosenState)
+    public event Action<int, int>? Observed; // (cellId, chosenState)
 
     public WaveGrid(int width, int height)
     {
