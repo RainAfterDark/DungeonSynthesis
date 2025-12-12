@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using DungeonCore.Shared;
 
 namespace DungeonCore.Topology;
@@ -26,16 +27,19 @@ public class WaveGrid
             Cells[i] = new WaveCell(stateCount, sumWeights);
     }
 
-    public int ToId(int x, int y) => y * Width + x;
-    public (int x, int y) FromId(int id) => (id % Width, id / Width);
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int ToId(int x, int y) => y * Width + x;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private (int x, int y) FromId(int id) => (id % Width, id / Width);
+    
     public IEnumerable<(int neighborId, int dir)> NeighborsOf(int id)
     {
         var (x, y) = FromId(id);
-        for (int dir = 0; dir < 4; dir++)
+        for (var dir = 0; dir < 4; dir++)
         {
-            int nx = x + Direction.Dx[dir];
-            int ny = y + Direction.Dy[dir];
+            var nx = x + Direction.Dx[dir];
+            var ny = y + Direction.Dy[dir];
             if (nx >= 0 && nx < Width && ny >= 0 && ny < Height)
                 yield return (ToId(nx, ny), dir);
         }

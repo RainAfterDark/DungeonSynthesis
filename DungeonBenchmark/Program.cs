@@ -18,16 +18,13 @@ var s =
 var (charData, width, height) = Helpers.StringToCharGrid(s);
 var mg = new MappedGrid<char>(charData, width, height,'?');
 var model = new OverlappingModel(3, true);
-var oh = 25;
-var ow = 50;
+var oh = 29;
+var ow = 69;
 var seed = Random.Shared.Next();
-// Contradictions:
-// seed = 1698121561; // scanline
-// seed = 1365822617; // min-entropy
-Console.WriteLine($"Seed: {seed}");
+Console.Write($"Seed: {seed} -> ");
 var tm = new TileMapGenerator<char>(mg, model, 
     new MinEntropyHeuristic(), 
-    new Ac3Propagator(),
+    new Ac4Propagator(),
     ow, oh, seed);
     tm.Initialize();
     Console.WriteLine(tm.Generate());
