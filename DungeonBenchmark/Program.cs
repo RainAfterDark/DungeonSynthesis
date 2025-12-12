@@ -18,21 +18,20 @@ var s =
     """;
 var (charData, width, height) = Helpers.StringToCharGrid(s);
 var mg = new MappedGrid<char>(charData, width, height,'?');
-var model = new OverlappingModel(3, true, false);
+var model = new OverlappingModel(3);
 const int oh = 28;
 const int ow = 100;
 var seed = Random.Shared.Next();
 // seed = 1724546381;
 var tm = new TileMapGenerator<char>(mg, model, 
     new MinEntropyHeuristic(), 
-    new Ac2001Propagator(),
+    new Ac4Propagator(),
     ow, oh, seed);
 
 var sw = new Stopwatch();
 sw.Start();
 tm.Initialize();
 var result = tm.Generate();
-Console.SetCursorPosition(0, 0);
-Console.WriteLine(Helpers.GridToString(tm.ToBase(), ow, oh));
 sw.Stop();
+Console.WriteLine(tm);
 Console.WriteLine($"Seed: {seed} | Domain: {model.StateCount} | {result} (took {sw.ElapsedMilliseconds}ms)");

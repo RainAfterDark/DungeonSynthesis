@@ -32,24 +32,19 @@ public class TileMapGenerator<TBase> (
     {
         var cellId = heuristic.PickNextCell(_grid);
         if (cellId == -1) return PropagationResult.Collapsed;
-        var result = propagator.Collapse(_grid, model, cellId) 
+        return propagator.Collapse(_grid, model, cellId) 
             ? PropagationResult.Collapsing 
             : PropagationResult.Contradicted;
-        Console.SetCursorPosition(0, 0);
-        Console.WriteLine(Helpers.GridToString(ToBase(), outWidth, outHeight));
-        // Thread.Sleep(50);
-        return result;
     }
 
-    public PropagationResult Generate()
+    public PropagationResult Generate(bool logProgress = false)
     {
         while (true)
         {
             var result = Step();
-            if (result != PropagationResult.Collapsing)
-            {
-                return result;
-            }
+            if (logProgress) WriteToConsole();
+            if (result == PropagationResult.Collapsing) continue;
+            return result;
         }
     }
 
@@ -58,5 +53,13 @@ public class TileMapGenerator<TBase> (
         var cellStates = _grid.Cells.Select(c => c.Observed).ToArray();
         var cellIds = cellStates.Select(model.GetTileId).ToArray();
         return inputGrid.ToBase(cellIds, outWidth, outHeight);
+    }
+
+    public override string ToString() => Helpers.GridToString(ToBase(), outWidth, outHeight);
+    
+    private void WriteToConsole()
+    {
+        Console.SetCursorPosition(0, 0);
+        Console.WriteLine(this);
     }
 }
