@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://c4rsd5jmmlxfw"]
+
+[ext_resource type="Script" uid="uid://c18gslmyshcpt" path="res://src/WfcController.cs" id="1_rvslj"]
+[ext_resource type="PackedScene" uid="uid://yjucybelmwnc" path="res://scenes/TestMap.tscn" id="2_0bbpv"]
+
+[node name="Main" type="Node2D"]
+
+[node name="WfcController" type="Node2D" parent="." node_paths=PackedStringArray("OutputRoot")]
+position = Vector2(0, -1)
+script = ExtResource("1_rvslj")
+InputPatternScene = ExtResource("2_0bbpv")
+OutputRoot = NodePath("../OutputGrid")
+OutputSize = Vector2i(40, 24)
+N = 2
+
+[node name="OutputGrid" type="Node2D" parent="."]
