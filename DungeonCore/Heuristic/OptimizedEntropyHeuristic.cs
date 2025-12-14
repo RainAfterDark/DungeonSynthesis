@@ -26,16 +26,36 @@ public sealed class OptimizedEntropyHeuristic : IHeuristic
         var maxStates = model.StateCount;
         
         // Populate Entropy Data
+        double globalWlwSum = 0;
         _stateWlw = new double[maxStates];
         for (var i = 0; i < maxStates; i++)
         {
             var w = model.GetWeight(i);
-            _stateWlw[i] = w > 1e-9 ? w * Math.Log(w) : 0;
+            // Safety check for weight=0 to avoid NaN
+            var wlw = w > 1e-9 ? w * Math.Log(w) : 0;
+        
+            _stateWlw[i] = wlw;
+            globalWlwSum += wlw;
         }
-
+        
         _cellWlwSums = new double[cellCount];
-        var totalWlw = _stateWlw.Sum();
-        Array.Fill(_cellWlwSums, totalWlw); 
+        for (var id = 0; id < cellCount; id++)
+        {
+            var cell = grid.Cells[id];
+            if (cell.DomainCount == maxStates)
+            {
+                _cellWlwSums[id] = globalWlwSum;
+                continue;
+            }
+            
+            double currentWlwSum = 0;
+            for (var s = 0; s < maxStates; s++)
+            {
+                if (!cell.Domain[s]) continue;
+                currentWlwSum += _stateWlw[s];
+            }
+            _cellWlwSums[id] = currentWlwSum;
+        }
 
         // Initialize Buckets
         _buckets = new List<int>[maxStates + 1];
@@ -45,7 +65,7 @@ public sealed class OptimizedEntropyHeuristic : IHeuristic
         _currentDomainSize = new int[cellCount];
 
         // Fill Buckets
-        for (int i = 0; i < cellCount; i++)
+        for (var i = 0; i < cellCount; i++)
         {
             var cell = grid.Cells[i];
             

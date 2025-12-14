@@ -13,16 +13,40 @@ public sealed class MinEntropyHeuristic : IHeuristic
     public void Initialize(WaveGrid grid, IModel model, Random random)
     {
         _random = random;
-        _stateWlw = new double[model.StateCount];
-        for (var i = 0; i < model.StateCount; i++)
+        var cellCount = grid.CellCount;
+        var maxStates = model.StateCount;
+        
+        double globalWlwSum = 0;
+        _stateWlw = new double[maxStates];
+        for (var i = 0; i < maxStates; i++)
         {
             var w = model.GetWeight(i);
-            _stateWlw[i] = w > 1e-9 ? w * Math.Log(w) : 0;
+            // Safety check for weight=0 to avoid NaN
+            var wlw = w > 1e-9 ? w * Math.Log(w) : 0;
+        
+            _stateWlw[i] = wlw;
+            globalWlwSum += wlw;
         }
         
-        _cellWlwSums = new double[grid.CellCount];
-        var totalWlw = _stateWlw.Sum();
-        Array.Fill(_cellWlwSums, totalWlw);
+        _cellWlwSums = new double[cellCount];
+        for (var id = 0; id < cellCount; id++)
+        {
+            var cell = grid.Cells[id];
+            if (cell.DomainCount == maxStates)
+            {
+                _cellWlwSums[id] = globalWlwSum;
+                continue;
+            }
+            
+            double currentWlwSum = 0;
+            for (var s = 0; s < maxStates; s++)
+            {
+                if (!cell.Domain[s]) continue;
+                currentWlwSum += _stateWlw[s];
+            }
+            _cellWlwSums[id] = currentWlwSum;
+        }
+        
         _initialized = true;
     }
     

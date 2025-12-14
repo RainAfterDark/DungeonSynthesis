@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using DungeonCore.Heuristic;
+using DungeonCore.Model;
 using DungeonCore.Shared.Data;
 
 namespace DungeonCore.Topology;
@@ -21,12 +23,51 @@ public class WaveGrid
         Cells = new WaveCell[CellCount];
     }
 
-    public void Initialize(int stateCount, double sumWeights)
+    public void Initialize(IModel model, IHeuristic heuristic)
     {
         for (var i = 0; i < CellCount; i++)
-            Cells[i] = new WaveCell(stateCount, sumWeights);
-        Banned = null;
-        Observed = null;
+            Cells[i] = new WaveCell(model.StateCount, model.SumWeights);
+        
+        // Subscribe events
+        Banned = heuristic.OnBanned;
+        Observed = heuristic.OnObserved;
+        
+        // Apply boundary constraints (for non-periodic models)
+        // We define the valid coordinate ranges for every state.
+        var xMin = new int[model.StateCount];
+        var xMax = new int[model.StateCount];
+        var yMin = new int[model.StateCount];
+        var yMax = new int[model.StateCount];
+
+        for (var i = 0; i < model.StateCount; i++)
+        {
+            // Default: A state is valid everywhere (0 to Width-1, 0 to Height-1).
+            xMin[i] = 0; xMax[i] = Width - 1;
+            yMin[i] = 0; yMax[i] = Height - 1;
+
+            // Check UP (Dir 0): If no neighbors, it must be very Top
+            if (!model.HasSupport(i, 0)) yMax[i] = 0; 
+            // Check RIGHT (Dir 1): If no neighbors, must be at very Right
+            if (!model.HasSupport(i, 1)) xMin[i] = Width - 1;
+            // Check DOWN (Dir 2): If no neighbors, must be at very Bottom
+            if (!model.HasSupport(i, 2)) yMin[i] = Height - 1;
+            // Check LEFT (Dir 3): If no neighbors, must be at very Left
+            if (!model.HasSupport(i, 3)) xMax[i] = 0;
+        }
+        
+        // Go through each state in each cell
+        for (var y = 0; y < Height; y++)
+        {
+            for (var x = 0; x < Width; x++)
+            {
+                for (var s = 0; s < model.StateCount; s++)
+                {
+                    if (x >= xMin[s] && x <= xMax[s] && y >= yMin[s] && y <= yMax[s]) continue;
+                    // Ban if state cannot be within bounds
+                    Cells[ToId(x, y)].Ban(s, model.GetWeight(s));
+                }
+            }
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

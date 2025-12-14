@@ -7,31 +7,41 @@ using DungeonCore.Propagator;
 using DungeonCore.Shared.Data;
 using DungeonCore.Shared.Util;
 
-var s =
+const string wfc = 
     """
-                
-     ┌─────┐     
-     │     └──┐ 
-     │  WFC   │ 
-     └──┐     │ 
-        └─────┘ 
-                
+               
+    ┌─────┐     
+    │     └──┐ 
+    │  WFC   │ 
+    └──┐     │ 
+       └─────┘ 
+               
+   """;
+const string skyline = 
+    """
+    ................
+    ....#...........
+    ...##...@...#...
+    ...##......###..
+    .####......####.
+    .#####..#.#####.
+    ################
+    ################
     """;
-var (charData, width, height) = Helpers.StringToCharGrid(s);
-var mg = new MappedGrid<char>(charData, width, height,'?');
+var (grid, width, height) = Helpers.StringToCharGrid(skyline);
+var mg = new MappedGrid<char>(grid, width, height,'?');
 
 const int oh = 28;
 const int ow = 100;
 var sw = new Stopwatch();
 var runs = 0;
 var result = PropagationResult.Contradicted;
-while (result == PropagationResult.Contradicted || runs < 100)
+while (result == PropagationResult.Contradicted || runs < 10)
 {
     GC.Collect();
     var seed = Random.Shared.Next();
-    // seed = 1190156738;
     var tm = new TileMapGenerator<char>(mg,
-        new OverlappingModel(3),
+        new OverlappingModel(3, false),
         new OptimizedEntropyHeuristic(), 
         new Ac4Propagator(),
         ow, oh, seed);
@@ -40,5 +50,6 @@ while (result == PropagationResult.Contradicted || runs < 100)
     result = tm.Generate(true);
     sw.Stop();
     runs++;
+    // Console.WriteLine(tm);
     Console.WriteLine($"Runs: {runs} | Seed: {seed} | {result} (took {sw.ElapsedMilliseconds}ms)");
 }
