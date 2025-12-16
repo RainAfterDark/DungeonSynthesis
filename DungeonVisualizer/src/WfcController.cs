@@ -20,8 +20,8 @@ public partial class WfcController : Node
     [Export] public int N = 3;
 
     // The Palette: Maps WFC Integer IDs <-> Godot TileStacks
-    private readonly Dictionary<int, TileState> _idToColumn = new();
-    private readonly Dictionary<TileState, int> _columnToId = new();
+    private readonly Dictionary<int, TileStack> _idToColumn = new();
+    private readonly Dictionary<TileStack, int> _columnToId = new();
     private int _nextId;
 
     // Captured Config to recreate layers correctly
@@ -45,50 +45,37 @@ public partial class WfcController : Node
         }
 
         GD.Print("WFC: Starting Generation...");
-
-        // 1. Instantiate Input
         var patternNode = InputPatternScene.Instantiate();
         AddChild(patternNode);
-
-        // 2. Encode (Extract Grid + Capture Config)
+        
         var (inputGrid, width, height) = EncodeInput(patternNode);
-        
-        // 3. Cleanup Input
         patternNode.QueueFree();
-
         if (inputGrid.Length == 0) return;
-
-        DebugPalette(); // Print stats to console
-
-        // 4. Run Library Logic
-        var mapping = new MappedGrid<int>(inputGrid, width, height, -1);
+        // TODO: Encode the input to be parsable by the benchmarker
         
-        // Note: 'PeriodicInput' tells model if bottom connects to top
-        var model = new OverlappingModel(N); 
+        DebugPalette();
+        var mapping = new MappedGrid<int>(inputGrid, width, height, -1);
+        var model = new OverlappingModel(N);
 
         var generator = new TileMapGenerator<int>(
             mapping,
             model,
-            new OptimizedEntropyHeuristic(), // Or MinEntropyHeuristic
+            new OptimizedEntropyHeuristic(),
             new Ac4Propagator(),
             OutputSize.X,
             OutputSize.Y,
             Random.Shared.Next()
         );
         
-        // Note: If you want Periodic Output (seamless texture), pass true here if your library supports it
-        // generator.SetPeriodic(PeriodicOutput); 
+        var result = generator.Generate();
+        GD.Print($"Model States: {model.StateCount}");
         
-        var success = generator.Generate();
-
-        if (success == PropagationResult.Contradicted)
+        if (result == PropagationResult.Contradicted)
             GD.PrintErr("WFC: Contradiction reached! Showing partial result.");
         else
             GD.Print("WFC: Success!");
 
         var outputIds = generator.ToBase();
-
-        // 5. Decode and Paint
         ApplyToTileMap(outputIds, OutputSize.X, OutputSize.Y);
     }
 
@@ -104,8 +91,7 @@ public partial class WfcController : Node
             GD.PrintErr("WFC: Input scene contains no TileMapLayers.");
             return ([], 0, 0);
         }
-
-        // --- CAPTURE CONFIG ---
+        
         _sharedTileSet = layers[0].TileSet;
         _layerConfigs.Clear();
         foreach (var l in layers)
@@ -121,66 +107,61 @@ public partial class WfcController : Node
 
         // Determine bounds
         var usedRect = layers[0].GetUsedRect();
-        foreach (var l in layers) usedRect = usedRect.Merge(l.GetUsedRect());
+        usedRect = layers.Aggregate(usedRect, (current, l) => current.Merge(l.GetUsedRect()));
 
-        int w = usedRect.Size.X;
-        int h = usedRect.Size.Y;
-        int[] grid = new int[w * h];
+        var w = usedRect.Size.X;
+        var h = usedRect.Size.Y;
+        var grid = new int[w * h];
 
         _idToColumn.Clear();
         _columnToId.Clear();
         _nextId = 0;
 
-        for (int y = 0; y < h; y++)
+        for (var y = 0; y < h; y++)
         {
-            for (int x = 0; x < w; x++)
+            for (var x = 0; x < w; x++)
             {
-                Vector2I cellCoords = usedRect.Position + new Vector2I(x, y);
-                var column = new TileState();
+                var cellCoords = usedRect.Position + new Vector2I(x, y);
+                var column = new TileStack();
 
-                for (int i = 0; i < layers.Count; i++)
+                for (var i = 0; i < layers.Count; i++)
                 {
                     var layer = layers[i];
                     var sourceId = layer.GetCellSourceId(cellCoords);
 
-                    if (sourceId != -1)
-                    {
-                        // Check for Terrain Data
-                        var tileData = layer.GetCellTileData(cellCoords);
-                        int tSet = tileData?.TerrainSet ?? -1;
-                        int tPeering = tileData?.Terrain ?? -1;
+                    if (sourceId == -1) continue;
+                    var tileData = layer.GetCellTileData(cellCoords);
+                    var tSet = tileData?.TerrainSet ?? -1;
+                    var tId = tileData?.Terrain ?? -1;
 
-                        if (tSet != -1)
+                    if (tSet != -1) // If it's in a terrain set
+                    {
+                        column.Add(new TileData
                         {
-                            // It's a Terrain! Strip visual specifics.
-                            column.Add(new TileData
-                            {
-                                LayerIndex = i,
-                                SourceId = sourceId,
-                                TerrainSet = tSet,
-                                Terrain = tPeering,
-                                // Zero out visuals so hashing groups all "Grass" together
-                                AtlasCoords = Vector2I.Zero, 
-                                AlternativeTile = 0 
-                            });
-                        }
-                        else
+                            LayerIndex = i,
+                            SourceId = sourceId,
+                            TerrainSet = tSet,
+                            Terrain = tId,
+                            // Zero out visuals to hash groups of the same terrain together
+                            AtlasCoords = Vector2I.Zero, 
+                            AlternativeTile = 0 
+                        });
+                    }
+                    else // Keep exact details for the rest
+                    {
+                        column.Add(new TileData
                         {
-                            // It's a Prop! Keep exact visuals.
-                            column.Add(new TileData
-                            {
-                                LayerIndex = i,
-                                SourceId = sourceId,
-                                TerrainSet = -1,
-                                Terrain = -1,
-                                AtlasCoords = layer.GetCellAtlasCoords(cellCoords),
-                                AlternativeTile = layer.GetCellAlternativeTile(cellCoords)
-                            });
-                        }
+                            LayerIndex = i,
+                            SourceId = sourceId,
+                            TerrainSet = -1,
+                            Terrain = -1,
+                            AtlasCoords = layer.GetCellAtlasCoords(cellCoords),
+                            AlternativeTile = layer.GetCellAlternativeTile(cellCoords)
+                        });
                     }
                 }
 
-                if (!_columnToId.TryGetValue(column, out int id))
+                if (!_columnToId.TryGetValue(column, out var id))
                 {
                     id = _nextId++;
                     _columnToId[column] = id;
@@ -196,10 +177,10 @@ public partial class WfcController : Node
 
     private void ApplyToTileMap(int[] resultGrid, int width, int height)
     {
-        // 1. Clear Old Output
+        // Clear old output
         foreach (var child in OutputRoot.GetChildren()) child.QueueFree();
 
-        // 2. Create Layers
+        // Create layers
         var outLayers = new List<TileMapLayer>();
         foreach (var config in _layerConfigs)
         {
@@ -213,17 +194,17 @@ public partial class WfcController : Node
             outLayers.Add(newLayer);
         }
 
-        // 3. Prepare Batches for Auto-tiling
-        // Key: LayerIndex -> List of (Coords, TerrainSet, TerrainPeering)
+        // Prepare batches for auto-tiling
+        // Key: LayerIndex -> List of (Coords, TerrainSet, TerrainID)
         var terrainUpdates = new Dictionary<int, List<(Vector2I, int, int)>>();
 
-        // 4. Paint Grid
-        for (int y = 0; y < height; y++)
+        // Paint grid
+        for (var y = 0; y < height; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (var x = 0; x < width; x++)
             {
-                int stateId = resultGrid[y * width + x];
-                if (!_idToColumn.TryGetValue(stateId, out TileState column)) continue;
+                var stateId = resultGrid[y * width + x];
+                if (!_idToColumn.TryGetValue(stateId, out var column)) continue;
 
                 foreach (var tile in column.Tiles)
                 {
@@ -234,47 +215,46 @@ public partial class WfcController : Node
 
                     if (tile.TerrainSet >= 0)
                     {
-                        // Queue Terrain
+                        // Queue terrains
                         if (!terrainUpdates.ContainsKey(tile.LayerIndex))
-                            terrainUpdates[tile.LayerIndex] = new();
-                        
+                            terrainUpdates[tile.LayerIndex] = [];
                         terrainUpdates[tile.LayerIndex].Add((coords, tile.TerrainSet, tile.Terrain));
                     }
                     else
                     {
-                        // Paint Prop Directly
+                        // Paint the rest directly
                         layer.SetCell(coords, tile.SourceId, tile.AtlasCoords, tile.AlternativeTile);
                     }
                 }
             }
         }
 
-        // 5. Execute Auto-tiling
+        // Execute Auto-tiling
         foreach (var (layerIdx, updates) in terrainUpdates)
         {
             var layer = outLayers[layerIdx];
             
-            // Group by TerrainSet (e.g. Set 0 is Ground, Set 1 is Walls)
+            // Group by TerrainSet (e.g., Set 0 is Ground, Set 1 is Walls)
             var bySet = updates.GroupBy(u => u.Item2);
             
             foreach (var setGroup in bySet)
             {
-                int tSet = setGroup.Key;
+                var tSet = setGroup.Key;
 
-                // Group by Terrain Peering (e.g. Peering 0 is Grass, Peering 1 is Sand)
+                // Group by Terrain ID (e.g., ID 0 is Grass, ID 1 is Sand)
                 // This is crucial: SetCellsTerrainConnect works best when painting ONE terrain type at a time
                 var byTerrain = setGroup.GroupBy(g => g.Item3);
 
                 foreach (var terrainGroup in byTerrain)
                 {
-                    int tPeering = terrainGroup.Key;
+                    var tId = terrainGroup.Key;
                     
                     // Convert to Godot Array for API
                     var cells = new Godot.Collections.Array<Vector2I>();
                     foreach(var item in terrainGroup) cells.Add(item.Item1);
 
                     // CONNECT!
-                    layer.SetCellsTerrainConnect(cells, tSet, tPeering, false);
+                    layer.SetCellsTerrainConnect(cells, tSet, tId, false);
                 }
             }
         }
@@ -282,16 +262,13 @@ public partial class WfcController : Node
 
     private void DebugPalette()
     {
-        GD.PrintRich($"[b]WFC Palette Report ({_idToColumn.Count} Unique States):[/b]");
+        GD.Print($"WFC Palette Report ({_idToColumn.Count} Unique Tiles):");
         foreach (var (id, column) in _idToColumn.OrderBy(k => k.Key))
         {
-            var parts = new List<string>();
-            foreach (var tile in column.Tiles)
-            {
-                parts.Add(tile.TerrainSet != -1
+            var parts = column.Tiles.Select(tile => tile.TerrainSet != -1
                     ? $"[L{tile.LayerIndex}] Terrain (S{tile.TerrainSet}:P{tile.Terrain})"
-                    : $"[L{tile.LayerIndex}] Prop ({tile.AtlasCoords})");
-            }
+                    : $"[L{tile.LayerIndex}] Sprite ({tile.AtlasCoords})")
+                .ToList();
             GD.Print($"ID {id}: {string.Join(" + ", parts)}");
         }
     }
