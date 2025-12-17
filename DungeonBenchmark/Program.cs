@@ -36,7 +36,7 @@ const int ow = 100;
 var sw = new Stopwatch();
 var runs = 0;
 var result = PropagationResult.Contradicted;
-while (result == PropagationResult.Contradicted || runs < 10)
+while (result == PropagationResult.Contradicted || runs < 1000)
 {
     GC.Collect();
     var seed = Random.Shared.Next();
@@ -50,6 +50,5 @@ while (result == PropagationResult.Contradicted || runs < 10)
     result = tm.Generate(true);
     sw.Stop();
     runs++;
-    // Console.WriteLine(tm);
-    Console.WriteLine($"Runs: {runs} | Seed: {seed} | {result} (took {sw.ElapsedMilliseconds}ms)");
+    Console.WriteLine($"#{runs} | Seed: {seed} | {result} (took {sw.ElapsedMilliseconds}ms)".PadRight(ow));
 }

@@ -18,6 +18,7 @@ public class TileMapGenerator<TBase> (
 {
     private readonly Random _random = new(seed);
     private readonly WaveGrid _grid = new(outWidth, outHeight);
+    private readonly ConsoleRenderer _renderer = new(0, 1);
     private bool _initialized;
     
     public void Initialize()
@@ -70,7 +71,7 @@ public class TileMapGenerator<TBase> (
     
     private void WriteToConsole()
     {
-        Console.SetCursorPosition(0, 0);
-        Console.WriteLine(this);
+        _renderer.Render(ToString());
+        Console.SetCursorPosition(0, outHeight + 1);
     }
 }
