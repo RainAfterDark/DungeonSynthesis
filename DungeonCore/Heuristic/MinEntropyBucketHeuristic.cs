@@ -4,7 +4,7 @@ using DungeonCore.Topology;
 
 namespace DungeonCore.Heuristic;
 
-public sealed class OptimizedEntropyHeuristic : IHeuristic
+public sealed class MinEntropyBucketHeuristic : IHeuristic
 {
     private Random _random = new();
     
@@ -183,7 +183,7 @@ public sealed class OptimizedEntropyHeuristic : IHeuristic
             // H = log(SumWeights) - (SumWlw / SumWeights)
             var sumW = grid.Cells[cellId].SumWeights;
             var sumWlw = _cellWlwSums[cellId];
-            var entropy = Math.Log(sumW) - (sumWlw / sumW);
+            var entropy = Math.Log(sumW) - sumWlw / sumW;
 
             // Add noise for organic selection
             var noise = _random.NextDouble() * 1e-4;

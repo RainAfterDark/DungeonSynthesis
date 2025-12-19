@@ -41,8 +41,8 @@ while (result == PropagationResult.Contradicted || runs < 1000)
     GC.Collect();
     var seed = Random.Shared.Next();
     var tm = new TileMapGenerator<char>(mg,
-        new OverlappingModel(2),
-        new OptimizedEntropyHeuristic(), 
+        new OverlappingModel(3),
+        new MinEntropyHeapHeuristic(), 
         new Ac4Propagator(),
         ow, oh, seed);
     sw.Reset();

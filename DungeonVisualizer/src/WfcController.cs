@@ -62,7 +62,7 @@ public partial class WfcController : Node
         var generator = new TileMapGenerator<int>(
             mapping,
             model,
-            new OptimizedEntropyHeuristic(),
+            new MinEntropyBucketHeuristic(),
             new Ac4Propagator(),
             OutputSize.X,
             OutputSize.Y,
