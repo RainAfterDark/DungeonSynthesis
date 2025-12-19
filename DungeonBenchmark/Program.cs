@@ -27,7 +27,7 @@ using DungeonCore.Topology;
 
     var (grid, width, height) = Helpers.StringToCharGrid(input);
     var mapping = new MappedGrid<char>(grid, width, height, '?');
-    var model = new OverlappingModel(2);
+    var model = new OverlappingModel(3);
     var tilemap = new TileMapGenerator<char>(mapping, model,
         new MinEntropyBucketHeuristic(),
         new Ac4Propagator(),
