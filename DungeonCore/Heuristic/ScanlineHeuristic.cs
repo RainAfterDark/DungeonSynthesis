@@ -14,7 +14,7 @@ public sealed class ScanlineHeuristic : IHeuristic
             var cell = grid.Cells[_idx];
             _idx++;
             if (cell.Observed != -1) continue;
-            return grid.CellCount - _idx;
+            return _idx - 1;
         }
     }
 }

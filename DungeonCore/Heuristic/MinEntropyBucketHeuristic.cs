@@ -16,6 +16,7 @@ public sealed class MinEntropyBucketHeuristic : IHeuristic
     private List<int>[] _buckets = [];
     private int[] _indexInBucket = [];
     private int[] _currentDomainSize = [];
+    private int _minBucketIndex;
 
     private bool _initialized;
 
@@ -24,6 +25,7 @@ public sealed class MinEntropyBucketHeuristic : IHeuristic
         _random = random;
         var cellCount = grid.CellCount;
         var maxStates = model.StateCount;
+        _minBucketIndex = maxStates - 1;
         
         // Populate Entropy Data
         double globalWlwSum = 0;
@@ -144,6 +146,11 @@ public sealed class MinEntropyBucketHeuristic : IHeuristic
         newList.Add(cellId);
         _indexInBucket[cellId] = newList.Count - 1;
         _currentDomainSize[cellId] = newSize;
+        
+        // Start searching from the new index if it's smaller
+        // than the minimum we keep track of
+        if (newSize < _minBucketIndex)
+            _minBucketIndex = newSize;
     }
 
     public int PickNextCell(WaveGrid grid)
@@ -153,8 +160,8 @@ public sealed class MinEntropyBucketHeuristic : IHeuristic
         // If a cell has a domain count of 1, pick it right away
         if (_buckets[1].Count > 0) return _buckets[1][0];
         
-        // Find the lowest entropy in buckets 2+
-        for (var k = 2; k < _buckets.Length; k++)
+        // Find the lowest entropy from the min bucket index
+        for (var k = _minBucketIndex; k < _buckets.Length; k++)
         {
             var candidates = _buckets[k];
             switch (candidates.Count)

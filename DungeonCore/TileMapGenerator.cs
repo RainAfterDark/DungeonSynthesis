@@ -16,7 +16,7 @@ public class TileMapGenerator<TBase> (
     int seed = 0)
     where TBase : notnull
 {
-    private readonly Random _random = new(seed);
+    private Random _random = new(seed);
     private readonly WaveGrid _grid = new(outWidth, outHeight);
     private readonly ConsoleRenderer _renderer = new(0, 1);
     private bool _initialized;
@@ -27,6 +27,7 @@ public class TileMapGenerator<TBase> (
         _grid.Initialize(model, heuristic);
         propagator.Initialize(_grid, model);
         heuristic.Initialize(_grid, model, _random);
+        
         _initialized = true;
     }
     
@@ -57,6 +58,23 @@ public class TileMapGenerator<TBase> (
             if (logProgress) WriteToConsole();
             if (result == PropagationResult.Collapsing) continue;
             return result;
+        }
+    }
+
+    public void GenerateUntilCollapsed(bool logProgress = false)
+    {
+        var result = PropagationResult.Collapsing;
+        while (result !=  PropagationResult.Collapsed)
+        {
+            _random = new Random();
+            Initialize();
+            while (true)
+            {
+                result = Step();
+                if (logProgress) WriteToConsole();
+                if (result == PropagationResult.Collapsing) continue;
+                break;
+            }
         }
     }
 
