@@ -18,6 +18,8 @@ public partial class WfcController : Node
     [Export] public Node OutputRoot;
     [Export] public Vector2I OutputSize = new(20, 20);
     [Export] public int N = 3;
+    [Export] public bool Periodic = true;
+    [Export] public bool Symmetry;
 
     // The Palette: Maps WFC Integer IDs <-> Godot TileStacks
     private readonly Dictionary<int, TileStack> _idToColumn = new();
@@ -55,7 +57,7 @@ public partial class WfcController : Node
         
         DebugPalette();
         var mapping = new MappedGrid<int>(inputGrid, width, height, -1);
-        var model = new OverlappingModel(N);
+        var model = new OverlappingModel(N, Periodic, Symmetry);
 
         var generator = new TileMapGenerator<int>(
             mapping,

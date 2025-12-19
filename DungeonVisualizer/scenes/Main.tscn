@@ -1,15 +1,15 @@
 [gd_scene load_steps=3 format=3 uid="uid://c4rsd5jmmlxfw"]
 
 [ext_resource type="Script" uid="uid://c18gslmyshcpt" path="res://src/WfcController.cs" id="1_rvslj"]
-[ext_resource type="PackedScene" uid="uid://duax65gc26ybo" path="res://scenes/Test.tscn" id="2_0bbpv"]
+[ext_resource type="PackedScene" uid="uid://dumot3k0cj7e" path="res://scenes/inputs/DungeonInput.tscn" id="2_rvslj"]
 
 [node name="Main" type="Node2D"]
 
 [node name="WfcController" type="Node2D" parent="." node_paths=PackedStringArray("OutputRoot")]
 script = ExtResource("1_rvslj")
-InputPatternScene = ExtResource("2_0bbpv")
+InputPatternScene = ExtResource("2_rvslj")
 OutputRoot = NodePath("../OutputGrid")
 OutputSize = Vector2i(40, 24)
-N = 2
+Symmetry = true
 
 [node name="OutputGrid" type="Node2D" parent="."]

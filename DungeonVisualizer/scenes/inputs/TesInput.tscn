@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=4 uid="uid://duax65gc26ybo"]
 
-[ext_resource type="TileSet" uid="uid://bqu4ifcfrbxnc" path="res://tilesets/test.tres" id="1_wen4y"]
+[ext_resource type="TileSet" uid="uid://bqu4ifcfrbxnc" path="res://tilesets/test_tileset.tres" id="1_wen4y"]
 
 [node name="Test" type="Node2D"]
 
