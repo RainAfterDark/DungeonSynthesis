@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using DungeonCore;           
 using DungeonCore.Heuristic; 
 using DungeonCore.Model;     
@@ -53,12 +55,16 @@ public partial class WfcController : Node
         var (inputGrid, width, height) = EncodeInput(patternNode);
         patternNode.QueueFree();
         if (inputGrid.Length == 0) return;
-        // TODO: Encode the input to be parsable by the benchmarker
         
         DebugPalette();
         var mapping = new MappedGrid<int>(inputGrid, width, height, -1);
+        var path = ProjectSettings.GlobalizePath("res://../DungeonBenchmark/Resources/exported_map.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var json = JsonSerializer.Serialize(mapping.ToMapData());
+        File.WriteAllText(path, json);
+        GD.Print($"Exported map to: {path}");
+        
         var model = new OverlappingModel(N, Periodic, Symmetry);
-
         var generator = new TileMapGenerator<int>(
             mapping,
             model,

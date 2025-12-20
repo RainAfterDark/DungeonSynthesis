@@ -25,6 +25,12 @@ public class MappedGrid<TBase> where TBase : notnull
         _id2Base.Add(-1, unknownValue);
     }
 
+    public static MappedGrid<TBase> FromMapData(MapData<TBase> data) =>
+        new(data.Grid, data.Width, data.Height, data.UnknownValue);
+
+    public MapData<TBase> ToMapData() => 
+        new(BaseGrid, Width, Height, _id2Base!.GetValueOrDefault(-1, default)!);
+
     public int[] ToTileIds(TBase[] data, int width, int height)
     {
         var newGrid = new int[width * height];

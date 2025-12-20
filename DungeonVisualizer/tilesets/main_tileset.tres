@@ -1,7 +1,8 @@
-[gd_resource type="TileSet" load_steps=7 format=3 uid="uid://bmp1780dbnr26"]
+[gd_resource type="TileSet" load_steps=9 format=3 uid="uid://bmp1780dbnr26"]
 
 [ext_resource type="Texture2D" uid="uid://2aku5gh12sxe" path="res://assets/floorfinalmaybe.png" id="1_ovrcg"]
 [ext_resource type="Texture2D" uid="uid://dxfr68sfd0iyc" path="res://assets/rocksfinalsgenalang.png" id="2_51jxl"]
+[ext_resource type="Texture2D" uid="uid://bcs5ddbwqbe41" path="res://assets/sprites.png" id="2_eu64q"]
 [ext_resource type="Texture2D" uid="uid://dt5kvmw4fyi5d" path="res://assets/waterfinalithink.png" id="2_i1yvk"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_51jxl"]
@@ -201,6 +202,13 @@ texture = ExtResource("1_ovrcg")
 5:0/0/terrain_set = 0
 5:0/0/terrain = 0
 5:0/0/terrains_peering_bit/bottom_side = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5sj8h"]
+texture = ExtResource("2_eu64q")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_eu64q"]
 texture = ExtResource("2_i1yvk")
@@ -609,3 +617,4 @@ terrain_set_0/terrain_2/color = Color(0.7782589, 0.31080014, 1.92523e-07, 1)
 sources/0 = SubResource("TileSetAtlasSource_51jxl")
 sources/2 = SubResource("TileSetAtlasSource_eu64q")
 sources/3 = SubResource("TileSetAtlasSource_amvic")
+sources/1 = SubResource("TileSetAtlasSource_5sj8h")

@@ -36,5 +36,5 @@ using DungeonCore.Topology;
     Console.WriteLine($"States: {model.StateCount}");
     Console.WriteLine("Please switch to Release mode to run benchmarks!");
 #else
-    var summary = BenchmarkRunner.Run<DataStructureBenchmark>();
+    var summary = BenchmarkRunner.Run<AlgorithmBenchmark>();
 #endif

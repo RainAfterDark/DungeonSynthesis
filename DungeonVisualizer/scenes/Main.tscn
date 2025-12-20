@@ -10,6 +10,5 @@ script = ExtResource("1_rvslj")
 InputPatternScene = ExtResource("2_rvslj")
 OutputRoot = NodePath("../OutputGrid")
 OutputSize = Vector2i(40, 24)
-Symmetry = true
 
 [node name="OutputGrid" type="Node2D" parent="."]

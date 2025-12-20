@@ -15,4 +15,10 @@
       <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="Resources\*.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
 </Project>
